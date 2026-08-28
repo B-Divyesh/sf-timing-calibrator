@@ -54,15 +54,16 @@ npm run test:e2e
 - `npm run build`: passed with Vite 7.3.6; output is `dist/` with
   `dist/index.html` at its root. Initial JS is 14.17 KB (5.91 KB gzip), CSS is
   10.78 KB (3.29 KB gzip), and the largest image is 74.68 KB.
-- `npm run test:e2e`: 12/12 passed in 30.2 seconds with Playwright 1.58.2,
+- `npm run test:e2e`: 12/12 passed in 30.1 seconds with Playwright 1.58.2,
   covering the entire
   sample → source confirm → manual device measurement → 20-beat verify → export
   preview journey; both new blank-number regressions (including intentional
-  zero controls); legal routes; and offline reloads on desktop Chromium and a
+  zero controls and proof that a rejected blank anchor preserves the last
+  accepted grid); legal routes; and offline reloads on desktop Chromium and a
   390 × 844 mobile viewport.
 - Axe WCAG 2 A/AA scan: zero serious or critical findings on desktop and mobile.
-- Lighthouse 12.8.2 mobile: Performance 100, Accessibility 100, Best Practices
-  100, SEO 100; FCP 1.0 s, LCP 1.1 s, TBT 0 ms, CLS 0.
+- Lighthouse 12.8.2 live mobile: Performance 100, Accessibility 100, Best
+  Practices 100, SEO 100; FCP 0.94 s, LCP 0.94 s, TBT 0 ms, CLS 0.
 - A 390 px keyboard smoke test verified that the skip link is the first Tab
   stop and that Space records a pulse, with no console errors.
 - A fresh browser privacy/offline smoke test found only same-origin runtime

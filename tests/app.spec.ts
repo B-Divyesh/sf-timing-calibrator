@@ -35,17 +35,25 @@ test('requires an explicit first-beat anchor instead of treating blank as zero',
   await page.goto('/');
   await page.getByRole('button', { name: 'Use a clean 120 BPM sample' }).click();
   await expect(page.getByText(/analyzed locally/)).toBeVisible();
-  const originalAnchor = await page.locator('#anchor').inputValue();
+
+  // Establish a non-zero accepted grid so a blank submission cannot pass by
+  // silently retaining diagnostics that happened to be based on zero.
+  await page.locator('#anchor').fill('125');
+  await page.getByRole('button', { name: 'Recheck grid' }).click();
+  const acceptedDiagnostics = await page.locator('#source-summary').textContent();
+  const acceptedDrift = await page.locator('#drift-rate').textContent();
 
   await page.locator('#anchor').fill('');
   await page.getByRole('button', { name: 'Recheck grid' }).click();
 
   await expect(page.locator('#track-status')).toHaveText('Enter a BPM from 30 to 300 and a non-negative anchor time.');
   await expect(page.locator('#track-status')).toHaveClass(/error/);
+  await expect(page.locator('#source-summary')).toHaveText(acceptedDiagnostics ?? '');
+  await expect(page.locator('#drift-rate')).toHaveText(acceptedDrift ?? '');
   await expect(page.getByRole('button', { name: 'Confirm source grid' })).toBeVisible();
 
   // An explicit zero is still a valid, intentional source anchor.
-  await page.locator('#anchor').fill(originalAnchor);
+  await page.locator('#anchor').fill('0');
   await page.getByRole('button', { name: 'Recheck grid' }).click();
   await expect(page.locator('#track-status')).toHaveText(/Grid updated/);
 });
