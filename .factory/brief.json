@@ -1,0 +1,10 @@
+{
+  "slug": "timing-calibrator",
+  "title": "Pulse Check",
+  "artifact_class": "static-web",
+  "user": "Rhythm-game makers and mobile music-app builders who need to distinguish a drifting source track from device playback latency.",
+  "smallest_useful_product": "Analyze audio onsets, correct an anchor grid, run a tap/click latency test, verify 20 beats, and export per-device offsets for Godot/Unity.",
+  "success_measure": "Median absolute timing error below 20 ms on two target devices.",
+  "monetization": "free",
+  "constraints": "Browser audio timing is an estimate; retain no microphone recordings; support keyboard alternatives to tap testing."
+}
