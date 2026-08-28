@@ -51,6 +51,7 @@ let device: DeviceState | null = null;
 let verification: VerificationState | null = null;
 let activeTest: ActiveTest | null = null;
 let audioContext: AudioContext | null = null;
+let sourceRevision = 0;
 
 const trackStatus = byId<HTMLDivElement>('track-status');
 const deviceStatus = byId<HTMLDivElement>('device-status');
@@ -84,6 +85,67 @@ function currentCue(): string {
   return document.querySelector<HTMLInputElement>('input[name="cue-mode"]:checked')?.value ?? 'both';
 }
 
+function cancelActiveTest(): void {
+  if (activeTest) {
+    window.clearTimeout(activeTest.endTimer);
+    activeTest.timers.forEach(window.clearTimeout);
+    activeTest = null;
+  }
+  tapPad.disabled = true;
+  verifyPad.disabled = true;
+  byId<HTMLButtonElement>('stop-test').hidden = true;
+  byId<HTMLButtonElement>('stop-verify').hidden = true;
+  byId('pulse').classList.remove('hit');
+}
+
+function clearVerification(message = 'Complete a fresh device measurement before verifying again.'): void {
+  verification = null;
+  verifyResults.hidden = true;
+  verifyResults.classList.remove('pass-report', 'fail-report');
+  startVerify.disabled = true;
+  byId('verify-instruction').textContent = 'Confirm Passes 01 and 02 to unlock verification.';
+  byId('json-preview').textContent = '';
+  setStatus(verifyStatus, message);
+}
+
+function clearDeviceAndVerification(sourceChanged = Boolean(source || device || verification)): void {
+  cancelActiveTest();
+  device = null;
+  deviceResults.hidden = true;
+  byId<HTMLButtonElement>('confirm-device').textContent = 'Use this device offset';
+  startTest.disabled = true;
+  clearVerification(sourceChanged
+    ? 'Source timing changed. Confirm it, then make a fresh device measurement and proof.'
+    : 'Verification not started.');
+  document.querySelector('.manual-entry')?.classList.remove('ready');
+  setStatus(deviceStatus, sourceChanged
+    ? 'Source timing changed. Confirm the new grid before measuring this device again.'
+    : 'Complete Pass 01 before measuring the device.');
+}
+
+function invalidateSourceDependencies(): void {
+  if (source) source.confirmed = false;
+  clearDeviceAndVerification();
+  byId<HTMLButtonElement>('confirm-track').textContent = 'Confirm source grid';
+}
+
+function prepareForNewSource(): number {
+  sourceRevision += 1;
+  invalidateSourceDependencies();
+  source = null;
+  trackResults.hidden = true;
+  return sourceRevision;
+}
+
+function invalidateVerificationForDeviceChange(): void {
+  cancelActiveTest();
+  clearVerification('Device estimate changed. Confirm it, then run a fresh 20-beat proof.');
+}
+
+function hasCompleteCalibration(): boolean {
+  return Boolean(source?.confirmed && device?.confirmed && verification);
+}
+
 function makeSample(): { samples: Float32Array; sampleRate: number } {
   const sampleRate = 44_100;
   const samples = new Float32Array(sampleRate * 8);
@@ -102,19 +164,23 @@ async function loadFile(file: File): Promise<void> {
     setStatus(trackStatus, 'That file is over 50 MB. Choose a shorter excerpt or an uncompressed clip under the limit.', 'error');
     return;
   }
+  const revision = prepareForNewSource();
   setStatus(trackStatus, `Reading ${file.name}…`);
   try {
     audioContext ??= new AudioContext();
     const buffer = await audioContext.decodeAudioData(await file.arrayBuffer());
-    analyze(buffer.getChannelData(0), buffer.sampleRate, file.name, buffer.duration);
+    if (revision !== sourceRevision) return;
+    analyze(buffer.getChannelData(0), buffer.sampleRate, file.name, buffer.duration, revision);
   } catch {
+    if (revision !== sourceRevision) return;
     setStatus(trackStatus, 'This browser could not decode that audio file. Try WAV, MP3, M4A, OGG, or a shorter export.', 'error');
   }
 }
 
-function analyze(samples: Float32Array, sampleRate: number, name: string, duration: number): void {
+function analyze(samples: Float32Array, sampleRate: number, name: string, duration: number, revision = prepareForNewSource()): void {
   setStatus(trackStatus, 'Finding onset candidates…');
   window.setTimeout(() => {
+    if (revision !== sourceRevision) return;
     const onsets = detectOnsets(samples, sampleRate);
     if (onsets.length < 4) {
       setStatus(trackStatus, 'Fewer than four clear onsets were found. Try a more percussive section or use the clean sample to learn the workflow.', 'error');
@@ -297,6 +363,7 @@ function finishTest(cancelled = false): void {
 }
 
 function renderDeviceResult(samples: number[], manual = false): void {
+  invalidateVerificationForDeviceChange();
   const label = byId<HTMLInputElement>('device-name').value.trim() || 'Unnamed target device';
   const offsetMs = manual ? samples[0] : median(samples);
   device = {
@@ -352,7 +419,7 @@ function renderVerification(errors: number[]): void {
 }
 
 function exportPayload(): string {
-  if (!source || !device || !verification) return '{}';
+  if (!source?.confirmed || !device?.confirmed || !verification) return '{}';
   const diagnosis = diagnoseDrift(source.onsets, source.bpm, source.anchorMs / 1000);
   const engine = byId<HTMLSelectElement>('engine').value;
   const engineSettings = engine === 'godot'
@@ -392,6 +459,10 @@ function exportPayload(): string {
 }
 
 function downloadExport(): void {
+  if (!hasCompleteCalibration()) {
+    setStatus(verifyStatus, 'Complete and confirm all three passes before exporting.', 'error');
+    return;
+  }
   const payload = exportPayload();
   const engine = byId<HTMLSelectElement>('engine').value;
   const url = URL.createObjectURL(new Blob([payload], { type: 'application/json' }));
@@ -419,8 +490,8 @@ byId<HTMLFormElement>('grid-form').addEventListener('submit', (event) => {
   if (bpm === null || bpm < 30 || bpm > 300 || anchorMs === null || anchorMs < 0) {
     setStatus(trackStatus, 'Enter a BPM from 30 to 300 and a non-negative anchor time.', 'error'); return;
   }
-  source.bpm = bpm; source.anchorMs = anchorMs; source.confirmed = false; renderSource();
-  byId<HTMLButtonElement>('confirm-track').textContent = 'Confirm source grid';
+  invalidateSourceDependencies();
+  source.bpm = bpm; source.anchorMs = anchorMs; renderSource();
   setStatus(trackStatus, 'Grid updated. Review the new alignment, then confirm it.', 'success');
 });
 byId('confirm-track').addEventListener('click', confirmSource);
@@ -447,6 +518,7 @@ document.addEventListener('keydown', (event) => {
 byId('engine').addEventListener('change', () => { byId('json-preview').textContent = exportPayload(); });
 byId('export-json').addEventListener('click', downloadExport);
 byId('copy-json').addEventListener('click', async () => {
+  if (!hasCompleteCalibration()) { setStatus(verifyStatus, 'Complete and confirm all three passes before copying.', 'error'); return; }
   try { await navigator.clipboard.writeText(exportPayload()); setStatus(verifyStatus, 'Calibration JSON copied to the clipboard.', 'success'); }
   catch { setStatus(verifyStatus, 'Clipboard access was blocked. Open the preview and copy the JSON manually.', 'error'); }
 });

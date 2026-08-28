@@ -1,6 +1,27 @@
 import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
+async function finishVisualVerification(page: import('@playwright/test').Page): Promise<void> {
+  await page.evaluate(() => {
+    const pulse = document.querySelector('#pulse');
+    const pad = document.querySelector<HTMLButtonElement>('#verify-pad');
+    if (!pulse || !pad) return;
+    new MutationObserver(() => { if (pulse.classList.contains('hit')) pad.click(); }).observe(pulse, { attributes: true, attributeFilter: ['class'] });
+  });
+  await page.getByRole('button', { name: 'Start 20-beat verification' }).click();
+  await expect(page.locator('#verify-results')).toBeVisible({ timeout: 15_000 });
+}
+
+async function downloadJson(page: import('@playwright/test').Page): Promise<Record<string, any>> {
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Export calibration JSON' }).click();
+  const download = await downloadPromise;
+  const stream = await download.createReadStream();
+  let contents = '';
+  for await (const chunk of stream) contents += chunk.toString();
+  return JSON.parse(contents) as Record<string, any>;
+}
+
 test('runs sample analysis, manual device input, verification, and export preview', async ({ page }) => {
   const errors: string[] = [];
   page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
@@ -19,16 +40,56 @@ test('runs sample analysis, manual device input, verification, and export previe
   await page.getByRole('button', { name: 'Use known offset' }).click();
   await page.getByRole('button', { name: 'Use this device offset' }).click();
   await expect(page.getByRole('button', { name: 'Start 20-beat verification' })).toBeEnabled();
-  await page.evaluate(() => {
-    const pulse = document.querySelector('#pulse');
-    const pad = document.querySelector<HTMLButtonElement>('#verify-pad');
-    if (!pulse || !pad) return;
-    new MutationObserver(() => { if (pulse.classList.contains('hit')) pad.click(); }).observe(pulse, { attributes: true, attributeFilter: ['class'] });
-  });
-  await page.getByRole('button', { name: 'Start 20-beat verification' }).click();
-  await expect(page.locator('#verify-results')).toBeVisible({ timeout: 15_000 });
+  await finishVisualVerification(page);
   await expect(page.locator('#json-preview')).toContainText('in.sociobot.pulse-check/v1');
   expect(errors).toEqual([]);
+});
+
+test('invalidates every dependent result and export after a source grid edit', async ({ page }, testInfo) => {
+  testInfo.setTimeout(45_000);
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Use a clean 120 BPM sample' }).click();
+  await expect(page.getByText(/analyzed locally/)).toBeVisible();
+  await page.getByRole('button', { name: 'Confirm source grid' }).click();
+  await page.getByText('Use a known offset instead of tapping').click();
+  await page.locator('#manual-offset').fill('25');
+  await page.getByRole('button', { name: 'Use known offset' }).click();
+  await page.getByRole('button', { name: 'Use this device offset' }).click();
+  await finishVisualVerification(page);
+
+  const original = await downloadJson(page);
+  expect(original.source.bpm).toBeGreaterThan(120);
+  expect(original.source.bpm).toBeLessThan(121);
+  expect(original.device.observed_offset_ms).toBe(25);
+  expect(original.verification.samples).toBe(20);
+
+  await page.locator('#bpm').fill('130');
+  await page.getByRole('button', { name: 'Recheck grid' }).click();
+
+  await expect(page.getByRole('button', { name: 'Confirm source grid' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Start 12-pulse test' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Start 20-beat verification' })).toBeDisabled();
+  await expect(page.locator('#device-results')).toBeHidden();
+  await expect(page.locator('#verify-results')).toBeHidden();
+  await expect(page.locator('#json-preview')).toBeEmpty();
+
+  let unexpectedDownload = false;
+  page.once('download', () => { unexpectedDownload = true; });
+  await page.locator('#export-json').dispatchEvent('click');
+  await page.waitForTimeout(100);
+  expect(unexpectedDownload).toBe(false);
+  await expect(page.locator('#verify-status')).toHaveText('Complete and confirm all three passes before exporting.');
+
+  await page.getByRole('button', { name: 'Confirm source grid' }).click();
+  await page.locator('#manual-offset').fill('30');
+  await page.getByRole('button', { name: 'Use known offset' }).click();
+  await page.getByRole('button', { name: 'Use this device offset' }).click();
+  await finishVisualVerification(page);
+
+  const repaired = await downloadJson(page);
+  expect(repaired.source.bpm).toBe(130);
+  expect(repaired.device.observed_offset_ms).toBe(30);
+  expect(repaired.verification.samples).toBe(20);
 });
 
 test('requires an explicit first-beat anchor instead of treating blank as zero', async ({ page }) => {
@@ -84,6 +145,15 @@ test('has no serious accessibility violations', async ({ page }) => {
   await page.goto('/');
   const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
   expect(results.violations.filter((violation) => ['serious', 'critical'].includes(violation.impact ?? ''))).toEqual([]);
+});
+
+test('footer links meet the 44px touch-target contract', async ({ page }) => {
+  await page.goto('/');
+  for (const name of ['Privacy', 'Terms', 'Source']) {
+    const box = await page.getByRole('link', { name, exact: true }).boundingBox();
+    expect(box?.width).toBeGreaterThanOrEqual(44);
+    expect(box?.height).toBeGreaterThanOrEqual(44);
+  }
 });
 
 test('legal pages are directly available', async ({ page }) => {

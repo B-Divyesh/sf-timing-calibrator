@@ -130,6 +130,7 @@ pre { max-height: 360px; overflow: auto; padding: 20px; background: var(--ink); 
 footer { display: grid; grid-template-columns: 1fr auto; gap: 20px; padding: 40px 3vw calc(40px + env(safe-area-inset-bottom)); border-top: 8px solid var(--red); }
 footer p { margin: 0; }
 footer nav { display: flex; gap: 24px; }
+footer nav a { display: inline-flex; min-width: 44px; min-height: 44px; align-items: center; justify-content: center; padding: 8px 4px; }
 footer .fine-print { grid-column: 1/-1; }
 .offline-note { position: fixed; z-index: 10; right: 16px; bottom: 16px; max-width: 360px; padding: 14px 18px; background: var(--ink); color: white; border-left: 5px solid var(--red); }
 
