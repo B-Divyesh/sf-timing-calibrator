@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#f3f0e8" />
+    <meta name="description" content="Separate source-track drift from device playback latency, then export a measured engine offset." />
+    <title>Pulse Check — Track &amp; device timing calibrator</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to calibration</a>
+    <header class="masthead">
+      <a class="wordmark" href="/" aria-label="Pulse Check home">P/C</a>
+      <p>Timing calibration bulletin</p>
+      <p class="folio">Issue 01 · Local instrument</p>
+    </header>
+
+    <main id="main">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="kicker">Track drift or device delay?</p>
+          <h1 id="hero-title">Find where the beat went.</h1>
+          <p class="dek">Inspect the source grid. Measure the phone. Verify twenty beats. Export one honest offset for Godot or Unity.</p>
+          <a class="button primary" href="#calibrator">Begin calibration <span aria-hidden="true">↓</span></a>
+          <p class="fine-print">Runs entirely in this browser. Audio never leaves your device.</p>
+        </div>
+        <figure class="hero-plate">
+          <picture>
+            <source media="(max-width: 700px)" srcset="/assets/pulse-bench-768.webp" />
+            <img src="/assets/pulse-bench-1536.webp" width="1536" height="1024" alt="A black phone beside a punched timing strip, calibration gauge, and pencil on warm paper" fetchpriority="high" decoding="async" />
+          </picture>
+          <figcaption>Plate 01 — Source timing and playback timing require separate measurements.</figcaption>
+        </figure>
+      </section>
+
+      <section id="calibrator" class="calibrator" aria-labelledby="calibrator-title">
+        <div class="section-heading">
+          <p class="eyebrow">The field test</p>
+          <h2 id="calibrator-title">One diagnosis in three passes</h2>
+          <p>Use the same target phone and headphones or speakers your players use. Finish each pass in order.</p>
+        </div>
+
+        <nav class="step-index" aria-label="Calibration passes">
+          <a href="#track"><span>01</span> Track</a>
+          <a href="#device"><span>02</span> Device</a>
+          <a href="#verify"><span>03</span> Verify</a>
+        </nav>
+
+        <article id="track" class="pass active-pass" aria-labelledby="track-title">
+          <header class="pass-header">
+            <p class="pass-number">Pass 01 / source</p>
+            <h3 id="track-title">Check the track grid</h3>
+            <p>Import a song or try the built-in click. We look for energy onsets and compare them with an adjustable beat grid.</p>
+          </header>
+          <div class="pass-body">
+            <div id="drop-zone" class="drop-zone">
+              <label class="file-label" for="audio-file">Choose an audio file</label>
+              <input id="audio-file" type="file" accept="audio/*,.wav,.mp3,.m4a,.ogg,.flac" />
+              <button id="sample-button" class="button secondary" type="button">Use a clean 120 BPM sample</button>
+              <p>WAV, MP3, M4A, OGG, or FLAC · decoded locally · maximum 50 MB</p>
+            </div>
+            <div id="track-status" class="status-line" role="status" aria-live="polite">No track loaded yet.</div>
+            <section id="track-results" class="results" hidden aria-labelledby="source-result-title">
+              <div class="result-lead">
+                <p class="stamp" id="source-stamp">Source pending</p>
+                <h4 id="source-result-title">Grid estimate</h4>
+                <p id="source-summary"></p>
+              </div>
+              <div class="metric-row" aria-label="Source analysis metrics">
+                <div><strong id="onset-count">—</strong><span>onsets</span></div>
+                <div><strong id="drift-rate">—</strong><span>drift / min</span></div>
+                <div><strong id="track-error">—</strong><span>median error</span></div>
+              </div>
+              <div class="wave-panel">
+                <canvas id="waveform" width="1000" height="240" aria-label="Waveform with detected onset and beat-grid marks"></canvas>
+                <p id="wave-text" class="sr-only"></p>
+              </div>
+              <form id="grid-form" class="grid-form">
+                <div>
+                  <label for="bpm">Tempo (BPM)</label>
+                  <input id="bpm" type="number" min="30" max="300" step="0.1" inputmode="decimal" />
+                </div>
+                <div>
+                  <label for="anchor">First beat anchor (ms)</label>
+                  <input id="anchor" type="number" min="0" step="1" inputmode="numeric" />
+                </div>
+                <button class="button secondary" type="submit">Recheck grid</button>
+              </form>
+              <details>
+                <summary>Review onset times</summary>
+                <ol id="onset-list" class="data-list"></ol>
+              </details>
+              <button id="confirm-track" class="button primary" type="button">Confirm source grid</button>
+            </section>
+          </div>
+        </article>
+
+        <article id="device" class="pass" aria-labelledby="device-title">
+          <header class="pass-header">
+            <p class="pass-number">Pass 02 / output</p>
+            <h3 id="device-title">Measure this device</h3>
+            <p>Tap with each pulse. Twelve samples estimate the combined browser, output, and human response on this setup.</p>
+          </header>
+          <div class="pass-body">
+            <div class="field-row">
+              <div>
+                <label for="device-name">Device label</label>
+                <input id="device-name" type="text" maxlength="60" autocomplete="off" placeholder="e.g. Pixel 9 · speaker" />
+              </div>
+              <fieldset>
+                <legend>Pulse cue</legend>
+                <label><input name="cue-mode" type="radio" value="both" checked /> Sound + visual</label>
+                <label><input name="cue-mode" type="radio" value="audio" /> Sound only</label>
+                <label><input name="cue-mode" type="radio" value="visual" /> Visual only</label>
+              </fieldset>
+            </div>
+            <details class="manual-entry">
+              <summary>Use a known offset instead of tapping</summary>
+              <p>If precise tapping is difficult, enter an offset measured with an external loopback or high-speed camera. This is recorded as a manual measurement in the export.</p>
+              <label for="manual-offset">Known output offset (ms)</label>
+              <div class="inline-action">
+                <input id="manual-offset" type="number" min="-1000" max="1000" step="1" />
+                <button id="apply-manual" class="button secondary" type="button">Use known offset</button>
+              </div>
+            </details>
+            <div class="test-bench">
+              <div id="pulse" class="pulse" aria-hidden="true"><span></span></div>
+              <p id="test-instruction">Press start, then tap the large pad or press Space with every pulse.</p>
+              <button id="start-test" class="button primary" type="button">Start 12-pulse test</button>
+              <button id="tap-pad" class="tap-pad" type="button" disabled><span>TAP</span><small id="tap-count">0 / 12</small></button>
+              <button id="stop-test" class="text-button" type="button" hidden>Stop test</button>
+            </div>
+            <div id="device-status" class="status-line" role="status" aria-live="polite">Complete Pass 01 before measuring the device.</div>
+            <section id="device-results" class="results" hidden aria-labelledby="device-result-title">
+              <div class="result-lead">
+                <p class="stamp">Device measured</p>
+                <h4 id="device-result-title">Playback offset estimate</h4>
+                <p id="device-summary"></p>
+              </div>
+              <div class="metric-row">
+                <div><strong id="offset-value">—</strong><span>median offset</span></div>
+                <div><strong id="jitter-value">—</strong><span>tap jitter (MAD)</span></div>
+                <div><strong id="sample-value">—</strong><span>valid samples</span></div>
+              </div>
+              <button id="confirm-device" class="button primary" type="button">Use this device offset</button>
+            </section>
+          </div>
+        </article>
+
+        <article id="verify" class="pass" aria-labelledby="verify-title">
+          <header class="pass-header">
+            <p class="pass-number">Pass 03 / proof</p>
+            <h3 id="verify-title">Verify twenty beats</h3>
+            <p>Repeat the pulse test. We remove the measured device offset and report the median absolute residual.</p>
+          </header>
+          <div class="pass-body">
+            <div class="verification-box">
+              <p id="verify-instruction">Confirm Passes 01 and 02 to unlock verification.</p>
+              <button id="start-verify" class="button primary" type="button" disabled>Start 20-beat verification</button>
+              <button id="verify-pad" class="tap-pad compact" type="button" disabled><span>TAP</span><small id="verify-count">0 / 20</small></button>
+              <button id="stop-verify" class="text-button" type="button" hidden>Stop verification</button>
+            </div>
+            <div id="verify-status" class="status-line" role="status" aria-live="polite">Verification not started.</div>
+            <section id="verify-results" class="results report" hidden aria-labelledby="report-title">
+              <p class="stamp" id="verify-stamp">Proof complete</p>
+              <h4 id="report-title">Calibration report</h4>
+              <p id="verify-summary"></p>
+              <div class="metric-row">
+                <div><strong id="verify-error">—</strong><span>median absolute error</span></div>
+                <div><strong id="verify-p90">—</strong><span>90th percentile</span></div>
+                <div><strong id="verify-hits">—</strong><span>beats within 20 ms</span></div>
+              </div>
+              <div class="export-row">
+                <label for="engine">Export target</label>
+                <select id="engine"><option value="godot">Godot 4</option><option value="unity">Unity</option><option value="generic">Generic JSON</option></select>
+                <button id="export-json" class="button primary" type="button">Export calibration JSON</button>
+                <button id="copy-json" class="button secondary" type="button">Copy JSON</button>
+              </div>
+              <details>
+                <summary>Preview export</summary>
+                <pre id="json-preview"></pre>
+              </details>
+            </section>
+          </div>
+        </article>
+      </section>
+
+      <aside class="limits" aria-labelledby="limits-title">
+        <p class="eyebrow">Read before shipping</p>
+        <h2 id="limits-title">An estimate, not a lab loopback.</h2>
+        <p>Browsers cannot observe the instant sound leaves a speaker. Pulse Check measures your tap against the Web Audio clock, so output latency, display latency, touch sampling, and human response can mingle. Repeat on each target device, keep the cue mode and output route consistent, and use a physical loopback for release-critical measurement.</p>
+      </aside>
+    </main>
+
+    <footer>
+      <p><strong>Pulse Check</strong> · A free, local-first timing instrument.</p>
+      <nav aria-label="Legal"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="https://github.com/B-Divyesh/sf-timing-calibrator">Source</a></nav>
+      <p class="fine-print">The editorial bench image was generated for this product; no stock assets or tracking scripts are used.</p>
+    </footer>
+    <div id="offline-note" class="offline-note" role="status" hidden>You’re offline. Pulse Check still works; keep this tab open.</div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

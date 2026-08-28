@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://timing-calibrator.sociobot.in/sitemap.xml

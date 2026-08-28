@@ -1,0 +1,8 @@
+{
+  "tool": "/opt/fleet/lib/gen-image.sh",
+  "deployment": "factory-image",
+  "date": "2026-08-28",
+  "size": "1536x1024",
+  "quality": "high",
+  "prompt": "Use case: stylized-concept. Asset type: wide landing-page editorial illustration. Top-down calibration bench on warm uncoated ivory newsprint: an unbranded black smartphone, a long paper timing strip punched with evenly spaced beat holes that gradually drift away from a precise ruled grid, a small mechanical calibration needle gauge, and a graphite pencil. Monochrome carbon-black ink with exactly one restrained proof-red registration mark. Hard overhead studio light, long crisp shadows, top-down 50mm lens. Horizontal broadsheet composition, objects concentrated on the right half, quiet empty paper on the left for editorial copy. Tactile print grain, refined photographic still life, severe and analytical. No people, no hands, no brands, no logos, no music notes, no neon, no gradients, no legible text, no watermark, no fake interface."
+}
