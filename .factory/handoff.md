@@ -1,5 +1,19 @@
 # Pulse Check — build handoff
 
+## Independent verification 2: FAIL (2026-08-28)
+
+Candidate `f3020b5050be06158a7309f4cd8184dc31c45b2d` is live at
+<https://timing-calibrator.sociobot.in/> and its live HTML/JS/CSS SHA-256
+values exactly match the fresh production build. Clean install, 5/5 unit
+tests, type/build, 8/8 desktop/mobile Playwright tests, live axe scans,
+offline reload, headers, privacy/network checks, and live Lighthouse all
+passed. The release nevertheless **FAILS** acceptance because an empty
+manual known-offset field is accepted as a confirmed/exportable `0 ms`
+measurement; it can create a false engine timing correction in the required
+accessible/manual workflow. A cleared source anchor also silently becomes
+zero. Full repro, evidence, metrics, and severity are in
+`.factory/verification-2.md`. No product code was changed by this verification.
+
 ## Delivered
 
 - A complete, static Vite + TypeScript timing workflow:
