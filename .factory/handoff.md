@@ -73,6 +73,23 @@ npm run test:e2e
   asset caching, and a no-cache service worker. No consumer package applies to
   this static-web artifact.
 
+## Live deployment
+
+- Repair code commit `2168be2547b69a5d1009611012836ea8c5bbc8c3` was pushed to
+  `main` and deployed with `swa deploy ./dist --env production --resource-group
+  sociobot --app-name sf-timing-calibrator` to
+  `https://gentle-plant-0eb1d730f.7.azurestaticapps.net`.
+- The production custom domain `https://timing-calibrator.sociobot.in/` now
+  matches the local production build exactly: `index.html` SHA-256
+  `9d00e7aef79f97da1913b4f5993df8b3c75d16b7520c2f505f74cf04025c1170` and
+  `sw.js` SHA-256
+  `fb773f8ae5db70caa46cf27595a7ec171287126798d8a565ef9f3f922b8c1d75`.
+- Live HTTPS returned the configured CSP, HSTS, strict referrer policy,
+  `nosniff`, and camera/microphone/geolocation-denying Permissions-Policy. A
+  fresh 390 px browser session reproduced the repaired blank-manual-offset
+  error, retained a hidden device result, used only the production origin, and
+  logged no console errors.
+
 ## Known limits
 
 - Browser timing cannot directly observe speaker output. Tap results combine
@@ -86,8 +103,6 @@ npm run test:e2e
 
 ## Next steps
 
-- Push this repair to `main` to trigger the configured Azure Static Web Apps
-  deployment, then verify live HTML and hashed asset identity and headers.
 - Pilot on at least two physical target phones and compare exports against a
   loopback measurement.
 - Add multi-anchor piecewise drift fitting if pilot teams regularly test long,
