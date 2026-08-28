@@ -1,110 +1,80 @@
-# Pulse Check — repair handoff
+# Pulse Check — verification 3 handoff
 
-## Independent verification 2: repaired (2026-08-28)
+## Verdict: FAIL
 
-Candidate `f3020b5050be06158a7309f4cd8184dc31c45b2d` failed because
-`Number("")` silently converted both a blank manual output offset and a blank
-first-beat anchor into zero. This repair adds `readRequiredNumber`, which checks
-for a non-empty value before conversion. A blank manual entry now announces an
-error, creates no device result, and cannot be confirmed or exported. A blank
-anchor now announces an error and retains the current source grid. An explicit
-zero remains valid in both flows.
+Candidate `723dfac5f830c120f39afec9140b95c8dad1c993` was independently tested on
+2026-08-28 from a clean checkout and against
+<https://timing-calibrator.sociobot.in/>. The live HTML, hashed JS/CSS, service
+worker, and mobile image match the local production build byte for byte.
 
-The service-worker revision is also bumped to `pulse-check-v2`, ensuring that
-clients with the prior cache-first offline shell receive this repaired release.
-The original independent report remains in `.factory/verification-2.md`.
+The repaired blank anchor and blank manual offset paths pass, but a new P1
+release blocker remains: changing an accepted source BPM or anchor after a
+completed calibration does not invalidate device, verification, or export
+state. Live reproduction showed an unchanged preview at BPM `120.2` while the
+new download used unconfirmed BPM `130` combined with the old device and
+verification measurements. The old result panels and downstream controls also
+remain visible/enabled.
 
-## Delivered
+Full evidence, hashes, reproduction steps, and severity are in
+`.factory/verification-3.md`. The prior failure is retained in
+`.factory/verification-2.md`.
 
-- A complete, static Vite + TypeScript timing workflow:
-  - local audio import/decoding with a 50 MB guard and readable error states;
-  - short-window energy onset detection with editable BPM and first-beat anchor;
-  - source-grid diagnosis using median timing error and drift per minute;
-  - 12-pulse device test using Web Audio and/or a visual cue, with pointer,
-    Space, and Enter input and robust median/MAD results;
-  - accessible manual-offset route for external loopback or camera measurements;
-  - 20-beat verification reporting median absolute error, p90, and hits under
-    the 20 ms pilot target;
-  - downloadable/copyable Godot 4, Unity, and generic JSON exports.
-- Local-first privacy: no uploads, microphone, analytics, cookies, account, or
-  third-party runtime resources. The `pulse-check-v2` service worker precaches
-  the shell and hashed build assets for offline reuse.
-- Responsive monochrome broadsheet system for desktop and 390 px mobile,
-  including focus states, reduced-motion behavior, semantic landmarks, a single
-  page h1, text alternatives for the canvas, and 44 px controls.
-- Original generated calibration-bench image, reviewed for text/brand/anatomy
-  artifacts and optimized to 12 KB mobile and 75 KB desktop WebP. Source and
-  prompt sidecars are in `assets/src/`; provenance is in `.factory/design.md`.
-- Direct `/privacy/` and `/terms/` pages, MIT license, deployment headers,
-  robots/sitemap, and expanded project documentation.
-
-## Verification
-
-Run from a clean checkout with Node.js 20+:
+## Verification summary
 
 ```sh
 npm ci
+npm audit --audit-level=low
 npm test
 npm run build
 npm run test:e2e
 ```
 
-- `npm ci`: 59 packages audited, zero vulnerabilities.
-- `npm test`: 5/5 unit tests passed (statistics, drift, BPM, onset detection).
-- `npm run build`: passed with Vite 7.3.6; output is `dist/` with
-  `dist/index.html` at its root. Initial JS is 14.17 KB (5.91 KB gzip), CSS is
-  10.78 KB (3.29 KB gzip), and the largest image is 74.68 KB.
-- `npm run test:e2e`: 12/12 passed in 30.1 seconds with Playwright 1.58.2,
-  covering the entire
-  sample → source confirm → manual device measurement → 20-beat verify → export
-  preview journey; both new blank-number regressions (including intentional
-  zero controls and proof that a rejected blank anchor preserves the last
-  accepted grid); legal routes; and offline reloads on desktop Chromium and a
-  390 × 844 mobile viewport.
-- Axe WCAG 2 A/AA scan: zero serious or critical findings on desktop and mobile.
-- Lighthouse 12.8.2 live mobile: Performance 100, Accessibility 100, Best
-  Practices 100, SEO 100; FCP 0.94 s, LCP 0.94 s, TBT 0 ms, CLS 0.
-- A 390 px keyboard smoke test verified that the skip link is the first Tab
-  stop and that Space records a pulse, with no console errors.
-- A fresh browser privacy/offline smoke test found only same-origin runtime
-  requests, no cookies, localStorage, or sessionStorage, an active
-  `pulse-check-v2` cache, and a successful offline reload with the offline note.
-- The static Azure response policy remains self-only CSP, denied
-  camera/microphone/geolocation, `nosniff`, strict referrer policy, immutable
-  asset caching, and a no-cache service worker. No consumer package applies to
-  this static-web artifact.
+- Install/audit: 59 packages audited, 0 vulnerabilities.
+- Unit tests: 5/5 passed.
+- Type check and exact Vite production build: passed; `dist/` produced.
+- Repository E2E: 12/12 passed in 36.4 s on desktop Chromium and 390 × 844
+  mobile.
+- Independent normal, boundary, malformed-file, recovery, download, clipboard,
+  live keyboard, privacy, caching, and offline probes completed.
+- Live Axe: zero serious/critical findings on desktop and mobile.
+- Factory URL verifier: passed with no console/page errors.
+- Lighthouse 12.8.2 live mobile: 100 Performance, 100 Accessibility,
+  100 Best Practices, 100 SEO; FCP 0.9 s, LCP 0.9 s, TBT 10 ms, CLS 0.
+- Initial JS is 14,170 bytes (5.91 KB gzip), CSS 10,780 bytes (3.29 KB gzip),
+  and the mobile hero 10,688 bytes.
+- Network requests were same-origin only; no cookies, local/session storage,
+  uploads, analytics, or third-party runtime resources were observed.
+- CSP, HSTS, referrer, MIME-sniffing, and camera/microphone/geolocation-denying
+  policies are present. Assets are immutable for one year, HTML revalidates
+  after 30 seconds, and `sw.js` is no-cache.
+- Service-worker v2 activation removed a seeded v1 cache and offline reload
+  succeeded.
 
-## Live deployment
+No lint script exists; TypeScript validation runs as part of the build. This is
+a static web product, so library/CLI consumer packaging and backend concurrency
+or persistence checks do not apply. The two-device physical pilot success
+metric could not be established in the browser-only container.
 
-- Repair code commit `2168be2547b69a5d1009611012836ea8c5bbc8c3` was pushed to
-  `main` and deployed with `swa deploy ./dist --env production --resource-group
-  sociobot --app-name sf-timing-calibrator` to
-  `https://gentle-plant-0eb1d730f.7.azurestaticapps.net`.
-- The production custom domain `https://timing-calibrator.sociobot.in/` now
-  matches the local production build exactly: `index.html` SHA-256
-  `9d00e7aef79f97da1913b4f5993df8b3c75d16b7520c2f505f74cf04025c1170` and
-  `sw.js` SHA-256
-  `fb773f8ae5db70caa46cf27595a7ec171287126798d8a565ef9f3f922b8c1d75`.
-- Live HTTPS returned the configured CSP, HSTS, strict referrer policy,
-  `nosniff`, and camera/microphone/geolocation-denying Permissions-Policy. A
-  fresh 390 px browser session reproduced the repaired blank-manual-offset
-  error, retained a hidden device result, used only the production origin, and
-  logged no console errors.
+## Defects
 
-## Known limits
+- **P1 — stale downstream calibration after source edit:** release-blocking.
+  Clear and disable device, verification, preview, and export state whenever
+  audio/BPM/anchor changes; require reconfirmation and a fresh proof. Add a
+  regression covering the downloaded JSON, not only visible source metrics.
+- **P2 — footer touch targets:** Privacy (`52 × 24` px), Terms (`44 × 24` px),
+  and Source (`51 × 24` px) are shorter than the required 44 px target on both
+  desktop and mobile.
 
-- Browser timing cannot directly observe speaker output. Tap results combine
-  playback/display/touch latency and human response; the UI and export state
-  this limitation. Use the manual route with a physical loopback for
-  release-critical values.
-- Onset detection is intentionally lightweight and works best on percussive
-  material. Dense or rubato music may require manual BPM/anchor correction.
-- Imported audio is analyzed from its first decoded channel and is kept only in
-  memory; no project persistence is intentional for v1 privacy.
+## Retained product limits
 
-## Next steps
+- Browser timing combines output, display/touch sampling, scheduling, and human
+  response; validate release-critical offsets with physical loopback.
+- Lightweight onset detection is best for percussive material and requires
+  manual correction for dense, rubato, or tempo-changing tracks.
+- Audio and calibration state stay in memory; only the versioned offline shell
+  is persisted.
 
-- Pilot on at least two physical target phones and compare exports against a
-  loopback measurement.
-- Add multi-anchor piecewise drift fitting if pilot teams regularly test long,
-  tempo-changing source tracks.
+## Next step
+
+Fix the P1 invalidation cascade, add regression coverage, deploy the repaired
+build, and rerun independent verification. Do not approve this candidate.
