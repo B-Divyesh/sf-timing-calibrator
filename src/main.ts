@@ -69,6 +69,17 @@ function setStatus(element: HTMLElement, message: string, kind: 'neutral' | 'err
   element.className = `status-line${kind === 'neutral' ? '' : ` ${kind}`}`;
 }
 
+/**
+ * Number('') is zero, which is useful in very few form flows and unsafe for a
+ * timing measurement. Keep absence distinct from an explicitly entered zero.
+ */
+function readRequiredNumber(input: HTMLInputElement): number | null {
+  const raw = input.value.trim();
+  if (!raw) return null;
+  const value = Number(raw);
+  return Number.isFinite(value) ? value : null;
+}
+
 function currentCue(): string {
   return document.querySelector<HTMLInputElement>('input[name="cue-mode"]:checked')?.value ?? 'both';
 }
@@ -403,9 +414,9 @@ dropZone.addEventListener('drop', (event) => {
 byId<HTMLFormElement>('grid-form').addEventListener('submit', (event) => {
   event.preventDefault();
   if (!source) return;
-  const bpm = Number(byId<HTMLInputElement>('bpm').value);
-  const anchorMs = Number(byId<HTMLInputElement>('anchor').value);
-  if (!Number.isFinite(bpm) || bpm < 30 || bpm > 300 || !Number.isFinite(anchorMs) || anchorMs < 0) {
+  const bpm = readRequiredNumber(byId<HTMLInputElement>('bpm'));
+  const anchorMs = readRequiredNumber(byId<HTMLInputElement>('anchor'));
+  if (bpm === null || bpm < 30 || bpm > 300 || anchorMs === null || anchorMs < 0) {
     setStatus(trackStatus, 'Enter a BPM from 30 to 300 and a non-negative anchor time.', 'error'); return;
   }
   source.bpm = bpm; source.anchorMs = anchorMs; source.confirmed = false; renderSource();
@@ -419,8 +430,8 @@ tapPad.addEventListener('click', recordTap);
 byId('stop-test').addEventListener('click', () => finishTest(true));
 byId('apply-manual').addEventListener('click', () => {
   if (!source?.confirmed) { setStatus(deviceStatus, 'Confirm the source grid before applying a device offset.', 'error'); return; }
-  const value = Number(byId<HTMLInputElement>('manual-offset').value);
-  if (!Number.isFinite(value) || value < -1000 || value > 1000) { setStatus(deviceStatus, 'Enter a known offset between −1000 and 1000 ms.', 'error'); return; }
+  const value = readRequiredNumber(byId<HTMLInputElement>('manual-offset'));
+  if (value === null || value < -1000 || value > 1000) { setStatus(deviceStatus, 'Enter a known offset between −1000 and 1000 ms.', 'error'); return; }
   renderDeviceResult([value], true);
 });
 byId('confirm-device').addEventListener('click', confirmDevice);

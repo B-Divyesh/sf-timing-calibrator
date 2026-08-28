@@ -31,6 +31,47 @@ test('runs sample analysis, manual device input, verification, and export previe
   expect(errors).toEqual([]);
 });
 
+test('requires an explicit first-beat anchor instead of treating blank as zero', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Use a clean 120 BPM sample' }).click();
+  await expect(page.getByText(/analyzed locally/)).toBeVisible();
+  const originalAnchor = await page.locator('#anchor').inputValue();
+
+  await page.locator('#anchor').fill('');
+  await page.getByRole('button', { name: 'Recheck grid' }).click();
+
+  await expect(page.locator('#track-status')).toHaveText('Enter a BPM from 30 to 300 and a non-negative anchor time.');
+  await expect(page.locator('#track-status')).toHaveClass(/error/);
+  await expect(page.getByRole('button', { name: 'Confirm source grid' })).toBeVisible();
+
+  // An explicit zero is still a valid, intentional source anchor.
+  await page.locator('#anchor').fill(originalAnchor);
+  await page.getByRole('button', { name: 'Recheck grid' }).click();
+  await expect(page.locator('#track-status')).toHaveText(/Grid updated/);
+});
+
+test('requires an explicit manual offset before creating a confirmable device result', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Use a clean 120 BPM sample' }).click();
+  await expect(page.getByText(/analyzed locally/)).toBeVisible();
+  await page.getByRole('button', { name: 'Confirm source grid' }).click();
+  await page.getByText('Use a known offset instead of tapping').click();
+
+  await page.locator('#manual-offset').fill('');
+  await page.getByRole('button', { name: 'Use known offset' }).click();
+
+  await expect(page.locator('#device-status')).toHaveText('Enter a known offset between −1000 and 1000 ms.');
+  await expect(page.locator('#device-status')).toHaveClass(/error/);
+  await expect(page.locator('#device-results')).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Start 20-beat verification' })).toBeDisabled();
+
+  // Zero remains allowed when it is actually measured and deliberately entered.
+  await page.locator('#manual-offset').fill('0');
+  await page.getByRole('button', { name: 'Use known offset' }).click();
+  await expect(page.locator('#offset-value')).toHaveText('+0.0 ms');
+  await expect(page.getByRole('button', { name: 'Use this device offset' })).toBeVisible();
+});
+
 test('has no serious accessibility violations', async ({ page }) => {
   await page.goto('/');
   const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();

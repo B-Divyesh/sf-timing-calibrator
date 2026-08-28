@@ -1,4 +1,6 @@
-const CACHE = 'pulse-check-v1';
+// Bump this whenever the precached application shell changes so existing
+// offline users receive the repaired shell instead of a cache-first old one.
+const CACHE = 'pulse-check-v2';
 const SHELL = [
   '/',
   '/privacy/',
