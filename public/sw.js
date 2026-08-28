@@ -9,7 +9,12 @@ const SHELL = [
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)));
+  event.waitUntil(caches.open(CACHE).then(async (cache) => {
+    await cache.addAll(SHELL);
+    const html = await (await fetch('/')).text();
+    const builtAssets = [...html.matchAll(/(?:src|href)="(\/assets\/[^\"]+)"/g)].map((match) => match[1]);
+    await cache.addAll([...new Set(builtAssets)]);
+  }));
   self.skipWaiting();
 });
 
