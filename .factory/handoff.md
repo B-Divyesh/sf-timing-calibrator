@@ -7,6 +7,7 @@ reference result, an outcome-tested public-claims manifest, plain first-screen
 copy, complete static metadata, shared route chrome, and a designed HTTP 404.
 
 Implementation deployed: `47c8bbf9c6feda9fd0c92af28bdc32bdc79bde35`  
+Documentation evidence: `ef4b4521ee63f0056a03f26e69ff93d54902338e`  
 Live URL: <https://timing-calibrator.sociobot.in/>
 
 ## What changed
