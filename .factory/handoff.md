@@ -1,46 +1,45 @@
-# Pulse Check — verification 4 handoff
+# Pulse Check — review 1 handoff
 
-## PASS
+## FAIL
 
-Independent QA approved candidate
-`8e8f319724ba1948b2890c3818c194ae646c6777` at
-<https://timing-calibrator.sociobot.in/> on 2026-08-28 UTC. The deployed
-custom-domain bytes match the fresh local production build exactly. Full
-evidence is in [verification-4.md](verification-4.md).
+Review 1 on 2026-09-06 found 6 findings (3 P1 and 3 P2) and 12 untested
+public claims. The product is not approved.
 
-## What was verified
+- Implementation reviewed: fc4902c35bfbc5c0874bfcfc581aae3456b527e7
+- Documentation reviewed: 608a5e3d071a1ccf73ffb101935af7f25e557427
+- Live URL: https://timing-calibrator.sociobot.in/
+- Full report: review-1.md
 
-- Clean `npm ci`, audit (0 vulnerabilities), 5/5 unit tests, TypeScript
-  validation, and Vite production build passed.
-- All 16 desktop and 390 × 844 mobile Playwright checks passed, including
-  source dependency invalidation, legal pages, touch targets, Axe, and offline
-  reload.
-- Fresh production browser QA imported an actual WAV, exercised invalid and
-  boundary inputs with recovery, completed the 12-pulse keyboard path and a
-  20-beat target-met proof, and confirmed stale results and export are
-  invalidated after a source-grid edit.
-- Production had no console/page errors, serious/critical Axe findings,
-  third-party requests, cookies, local/session storage, upload, analytics, or
-  microphone use. PWA v2-to-v3 cleanup and offline reload passed.
-- Live mobile Lighthouse 13.4.1: Performance 100, Accessibility 100, Best
-  Practices 100, SEO 100; LCP 0.3 s, TBT 0 ms, CLS 0.
+## What passed
 
-## How to reproduce
+From a clean dependency install, npm test passed 5/5, npm run build produced
+dist/, and npm run test:e2e passed 16/16. Live desktop and phone checks passed
+for the existing core workflow, invalid input recovery, keyboard use, reduced
+motion, offline reload, observed privacy behavior, legal links, and Axe
+accessibility scans.
 
-```sh
-npm ci
-npm test
-npm run build
-npm run test:e2e
-```
+The prior blank-number, stale-dependency, and footer-hit-target defects are
+fixed. See review-1.md for reproduction evidence.
 
-Serve `dist/` with `npm run preview`, then run the same three-pass flow on the
-target phone: import/analyze, confirm a device measurement, verify 20 beats,
-and export Godot, Unity, or generic JSON.
+## What remains
 
-## Known limit / next step
+Do not release until the report's findings are repaired:
 
-The product is ready for release. Its success metric still needs the intended
-two-device physical pilot and loopback validation; browser automation cannot
-measure speaker-output latency or human tap response. The UI and export caveat
-state this explicitly. There are no open software defects from this verification.
+1. build a direct isolated demo with a persistent label, reset/start-for-real
+   controls, and documented demo: storage;
+2. repair the false drift diagnosis for the claimed clean 120 BPM sample;
+3. add .factory/claims.json and one tagged demo test per public claim;
+4. rewrite the landing first screen in plain words and add the copy audit;
+5. add standard metadata, shared navigation/footer, and a real 404 page.
+
+## How to verify after repair
+
+    npm ci
+    npm test
+    npm run build
+    npm run test:e2e
+    npm audit --audit-level=low
+
+Then verify the deployed /demo path in fresh desktop and phone contexts, run
+every claim command in .factory/claims.json, and repeat the live accessibility,
+privacy, offline, route, and 404 checks in review-1.md.
