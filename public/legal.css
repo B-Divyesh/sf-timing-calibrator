@@ -1,0 +1,22 @@
+:root { color-scheme: light; --paper:#f3f0e8; --sheet:#fffcf5; --ink:#151512; --quiet:#5c5a52; --red:#b42318; --deep-red:#7d1710; --rule:#a9a69d; --serif:Georgia,"Times New Roman",serif; --sans:"Arial Narrow","Roboto Condensed",Arial,sans-serif; font-family:var(--sans); background:var(--paper); color:var(--ink); }
+* { box-sizing:border-box; }
+body { min-width:320px; margin:0; font-size:17px; line-height:1.55; }
+a { color:inherit; text-underline-offset:4px; }
+:focus-visible { outline:3px solid var(--red); outline-offset:4px; }
+.skip-link { position:fixed; z-index:5; top:12px; left:16px; padding:12px 16px; background:var(--ink); color:var(--sheet); transform:translateY(-160%); }
+.skip-link:focus { transform:translateY(0); }
+.masthead { display:flex; justify-content:space-between; align-items:center; gap:24px; min-height:72px; margin:0 3vw; border-bottom:4px solid var(--ink); font-size:14px; font-weight:800; }
+.wordmark { display:inline-flex; align-items:center; min-width:48px; min-height:48px; padding:10px 12px; background:var(--ink); color:var(--sheet); text-decoration:none; letter-spacing:-.035em; }
+.masthead nav,.footer-nav { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; }
+.masthead nav a,.footer-nav a { display:inline-flex; align-items:center; min-height:44px; padding:8px 10px; }
+main { max-width:780px; margin:0 auto; padding:72px 24px 96px; }
+h1,h2 { font-family:var(--serif); font-weight:400; line-height:.98; letter-spacing:-.04em; }
+h1 { margin:0 0 28px; font-size:clamp(3rem,10vw,5.5rem); }
+h2 { margin:48px 0 16px; font-size:clamp(2rem,5vw,3rem); }
+p,li { max-width:68ch; }
+footer { display:grid; grid-template-columns:1fr auto; gap:20px; padding:32px 3vw calc(32px + env(safe-area-inset-bottom)); border-top:8px solid var(--red); }
+footer p { margin:0; color:var(--quiet); }
+.footer-note { grid-column:1 / -1; font-size:14px; }
+.back-home { display:inline-flex; align-items:center; min-height:48px; padding:10px 18px; border:2px solid var(--ink); background:var(--sheet); font-weight:800; text-decoration:none; }
+.lead { font:1.2rem/1.5 var(--serif); }
+@media (max-width:600px) { .masthead { margin-inline:16px; gap:8px; } .masthead nav { gap:0; } .masthead nav a { padding-inline:7px; } main { padding:48px 16px 64px; } footer { grid-template-columns:1fr; padding-inline:16px; } .footer-note { grid-column:auto; } }

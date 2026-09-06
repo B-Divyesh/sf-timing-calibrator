@@ -20,7 +20,19 @@ export function detectOnsets(samples: Float32Array, sampleRate: number): number[
   for (let index = 2; index < flux.length - 2; index += 1) {
     const localThreshold = Math.max(threshold, median(flux.slice(Math.max(0, index - 18), index + 19)) * 3);
     if (flux[index] >= localThreshold && flux[index] > flux[index - 1] && flux[index] >= flux[index + 1]) {
-      const seconds = (index * hop) / sampleRate;
+      // Energy windows begin slightly before a sharp attack. Refine each
+      // candidate against the waveform so steady tracks do not acquire a fake
+      // tempo slope from 512-sample frame quantization.
+      const windowStart = index * hop;
+      const windowEnd = Math.min(samples.length, windowStart + windowSize);
+      let peak = 0;
+      for (let sample = windowStart; sample < windowEnd; sample += 1) peak = Math.max(peak, Math.abs(samples[sample]));
+      const onsetFloor = Math.max(0.015, peak * 0.18);
+      let refined = windowStart;
+      for (let sample = windowStart; sample < windowEnd; sample += 1) {
+        if (Math.abs(samples[sample]) >= onsetFloor) { refined = sample; break; }
+      }
+      const seconds = refined / sampleRate;
       if (seconds - last >= 0.16) {
         candidates.push(seconds);
         last = seconds;

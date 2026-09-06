@@ -1,61 +1,81 @@
 # Pulse Check
 
-Pulse Check helps rhythm-game and mobile music-app makers separate a drifting
-source grid from device playback delay. It analyzes local audio onsets, lets a
-maker correct the BPM and first-beat anchor, measures a target device with a
-tap/click test, verifies 20 corrected beats, and exports Godot, Unity, or generic
-JSON.
+Pulse Check helps rhythm-game makers and mobile music-app builders separate a
+drifting track grid from target-device playback delay. It analyzes selected
+local audio, measures a device with taps or a known offset, verifies 20 beats,
+and exports Godot, Unity, or generic JSON settings.
 
-The utility is free, static, local-first, and intended for use on the actual
-phones and output routes players will use. Browser timing is an estimate, not a
-substitute for physical loopback measurement.
+Start at `/demo` to load the steady 120 BPM reference track in an isolated
+browser sandbox. No account or payment details are needed for the sample.
+
+## Privacy and limits
+
+Audio and measurements stay in the browser. The app uses no cookies,
+advertising, analytics, microphone access, or third-party runtime requests.
+Its service worker supports offline reload after the first visit. Browser timing
+is an estimate, so release-critical work still needs a physical loopback and
+tests on each target device.
+
+See [Privacy](/privacy/) and [Terms](/terms/) for details. The demo lifecycle,
+sample, and separate storage key are documented in `.factory/demo.md`.
 
 ## Develop
 
 Requirements: Node.js 20 or newer.
 
 ```sh
-npm install
+npm ci
 npm run dev
 ```
 
-Then open the URL shown by Vite. No server, account, API key, microphone, or
-network connection is required after the first load.
+Open the local URL shown by Vite. Use `/demo` for the direct sample or choose a
+local audio file for a real calibration.
 
 ## Test and build
 
+From a clean checkout:
+
 ```sh
+npm ci
 npm test
 npm run build
 npm run test:e2e
+npm audit --audit-level=low
 ```
 
-`npm run build` is the deployment command. It writes the static application to
-`dist/`, with `dist/index.html` at its root. End-to-end tests use Playwright
-1.58.2 and exercise desktop Chromium plus a 390 × 844 mobile viewport.
+`npm test` runs the unit regression suite. `npm run test:e2e` runs desktop and
+390 px browser checks. Every public product claim is declared in
+`.factory/claims.json`; after `npm run build`, run each command in that file.
+For example:
 
-## How measurements work
+```sh
+npm run test:e2e -- --project=chromium --grep @claim:offline-reload
+```
 
-1. Short-window energy changes identify likely onsets in the selected audio.
-2. Onsets are compared with an editable BPM/anchor grid to estimate median
-   alignment error and drift per minute.
-3. Taps against 12 Web Audio/visual pulses produce a median device offset and
-   median absolute deviation (jitter). A known external measurement can be
-   entered instead.
-4. A 20-beat run subtracts that offset and reports median absolute residual,
-   90th percentile, and beats within 20 ms.
+`npm run build` writes the deployable static site to `dist/`, with
+`dist/index.html` at its root.
 
-Audio and timing data stay in memory. The only persistent browser data is the
-offline application cache. See `/privacy/` and `/terms/` in the built site.
+## How the calibration works
+
+1. Select local audio. Pulse Check marks likely energy onsets.
+2. Adjust the BPM and first-beat anchor until the track grid is credible.
+3. Confirm the source, then tap 12 pulses or enter an external known offset.
+4. Confirm the device offset and run the 20-beat verification.
+5. Export the matching Godot, Unity, or generic JSON correction.
+
+Files above 50 MB are rejected before decoding. A blank measurement is never
+treated as a zero measurement, and changing a confirmed source grid clears
+every dependent device, proof, and export result.
 
 ## Deploy
 
-Deploy the contents of `dist/` to Azure Static Web Apps. The included
-`staticwebapp.config.json` supplies security and cache headers; `sw.js` provides
-an offline shell. Factory deployment, DNS, and billing are intentionally outside
-this repository.
+Deploy `dist/` to Azure Static Web Apps. `staticwebapp.config.json` provides
+security and cache headers, the `/demo` rewrite, and the designed 404 response.
+`sw.js` caches the application shell for offline reload. Factory deployment,
+DNS, and billing are outside this repository.
 
 ## License
 
-MIT. The generated editorial image is original to this product; prompt and
-provenance are recorded in `.factory/design.md` and `assets/src/`.
+MIT. The editorial illustration is original generated work for Pulse Check.
+Its prompt and provenance are recorded in `.factory/design.md` and
+`assets/src/`.

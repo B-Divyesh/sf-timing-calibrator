@@ -4,40 +4,61 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#f3f0e8" />
-    <meta name="description" content="Separate source-track drift from device playback latency, then export a measured engine offset." />
-    <title>Pulse Check — Track &amp; device timing calibrator</title>
+    <meta name="description" content="Check track drift and device playback delay, then export a local timing correction for Godot or Unity." />
+    <link id="canonical" rel="canonical" href="https://timing-calibrator.sociobot.in/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Pulse Check — Track and device timing" />
+    <meta property="og:description" content="Check track drift and device playback delay, then export a local timing correction." />
+    <meta property="og:url" content="https://timing-calibrator.sociobot.in/" />
+    <meta property="og:image" content="https://timing-calibrator.sociobot.in/assets/pulse-check-social.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Pulse Check — Track and device timing" />
+    <meta name="twitter:description" content="Check track drift and device playback delay, then export a local timing correction." />
+    <meta name="twitter:image" content="https://timing-calibrator.sociobot.in/assets/pulse-check-social.jpg" />
+    <title>Pulse Check — Track and device timing</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to calibration</a>
     <header class="masthead">
-      <a class="wordmark" href="/" aria-label="Pulse Check home">P/C</a>
-      <p>Timing calibration bulletin</p>
-      <p class="folio">Issue 01 · Local instrument</p>
+      <a class="wordmark" href="/" aria-label="Pulse Check home">Pulse Check</a>
+      <nav aria-label="Primary navigation">
+        <a href="/demo">Demo</a>
+        <a href="#calibrator">Calibration</a>
+        <a href="/privacy/">Privacy</a>
+      </nav>
     </header>
+
+    <aside id="demo-banner" class="demo-banner" role="status" aria-live="polite" hidden>
+      <p><strong>Demo — sample data, nothing is saved.</strong> The steady reference track is separate from your work.</p>
+      <div><button id="reset-demo" class="button secondary" type="button">Reset demo</button><button id="start-real" class="button primary" type="button">Start for real</button></div>
+    </aside>
+    <div id="route-status" class="sr-only" aria-live="polite"></div>
 
     <main id="main">
       <section class="hero" aria-labelledby="hero-title">
         <div class="hero-copy">
-          <p class="kicker">Track drift or device delay?</p>
-          <h1 id="hero-title">Find where the beat went.</h1>
-          <p class="dek">Inspect the source grid. Measure the phone. Verify twenty beats. Export one honest offset for Godot or Unity.</p>
-          <a class="button primary" href="#calibrator">Begin calibration <span aria-hidden="true">↓</span></a>
-          <p class="fine-print">Runs entirely in this browser. Audio never leaves your device.</p>
+          <p class="kicker">Track grid and device playback</p>
+          <h1 id="hero-title" tabindex="-1">Separate track drift from device delay</h1>
+          <p class="dek">For rhythm-game and music-app makers testing whether the track or a target phone shifts the beat.</p>
+          <div class="hero-actions"><a class="button primary" href="/demo">Try it with sample data</a><a class="button secondary" href="#track">Choose audio</a></div>
+          <p class="action-note">The sample loads a steady 120 BPM track and opens its timing result.</p>
+          <ul class="plain-facts" aria-label="Product facts"><li>No account or payment.</li><li>Audio stays in this browser.</li><li>Works offline after the first visit.</li></ul>
         </div>
         <figure class="hero-plate">
           <picture>
             <source media="(max-width: 700px)" srcset="/assets/pulse-bench-768.webp" />
             <img src="/assets/pulse-bench-1536.webp" width="1536" height="1024" alt="A black phone beside a punched timing strip, calibration gauge, and pencil on warm paper" fetchpriority="high" decoding="async" />
           </picture>
-          <figcaption>Plate 01 — Source timing and playback timing require separate measurements.</figcaption>
+          <figcaption>Source timing and playback timing need separate measurements.</figcaption>
         </figure>
       </section>
 
       <section id="calibrator" class="calibrator" aria-labelledby="calibrator-title">
         <div class="section-heading">
-          <p class="eyebrow">The field test</p>
-          <h2 id="calibrator-title">One diagnosis in three passes</h2>
+          <p class="eyebrow">Calibration steps</p>
+          <h2 id="calibrator-title">Calibrate in three passes</h2>
           <p>Use the same target phone and headphones or speakers your players use. Finish each pass in order.</p>
         </div>
 
@@ -51,14 +72,14 @@
           <header class="pass-header">
             <p class="pass-number">Pass 01 / source</p>
             <h3 id="track-title">Check the track grid</h3>
-            <p>Import a song or try the built-in click. We look for energy onsets and compare them with an adjustable beat grid.</p>
+            <p>Choose local audio or open the sample. Pulse Check marks likely onsets and compares them with an editable beat grid.</p>
           </header>
           <div class="pass-body">
             <div id="drop-zone" class="drop-zone">
               <label class="file-label" for="audio-file">Choose an audio file</label>
               <input id="audio-file" type="file" accept="audio/*,.wav,.mp3,.m4a,.ogg,.flac" />
-              <button id="sample-button" class="button secondary" type="button">Use a clean 120 BPM sample</button>
-              <p>WAV, MP3, M4A, OGG, or FLAC · decoded locally · maximum 50 MB</p>
+              <button id="sample-button" class="button secondary" type="button">Try sample in demo</button>
+              <p>Audio is decoded locally. Files over 50 MB are rejected.</p>
             </div>
             <div id="track-status" class="status-line" role="status" aria-live="polite">No track loaded yet.</div>
             <section id="track-results" class="results" hidden aria-labelledby="source-result-title">
@@ -73,7 +94,7 @@
                 <div><strong id="track-error">—</strong><span>median error</span></div>
               </div>
               <div class="wave-panel">
-                <canvas id="waveform" width="1000" height="240" aria-label="Waveform with detected onset and beat-grid marks"></canvas>
+                <canvas id="waveform" width="1000" height="240" aria-label="Waveform with detected onset and beat-grid marks" aria-describedby="wave-text"></canvas>
                 <p id="wave-text" class="sr-only"></p>
               </div>
               <form id="grid-form" class="grid-form">
@@ -100,7 +121,7 @@
           <header class="pass-header">
             <p class="pass-number">Pass 02 / output</p>
             <h3 id="device-title">Measure this device</h3>
-            <p>Tap with each pulse. Twelve samples estimate the combined browser, output, and human response on this setup.</p>
+            <p>Tap with each pulse. Twelve samples estimate timing on this browser, output route, and input setup.</p>
           </header>
           <div class="pass-body">
             <div class="field-row">
@@ -117,7 +138,7 @@
             </div>
             <details class="manual-entry">
               <summary>Use a known offset instead of tapping</summary>
-              <p>If precise tapping is difficult, enter an offset measured with an external loopback or high-speed camera. This is recorded as a manual measurement in the export.</p>
+              <p>Use an external loopback or high-speed camera if tapping is difficult. We record it as a manual measurement in the export.</p>
               <label for="manual-offset">Known output offset (ms)</label>
               <div class="inline-action">
                 <input id="manual-offset" type="number" min="-1000" max="1000" step="1" />
@@ -152,11 +173,11 @@
           <header class="pass-header">
             <p class="pass-number">Pass 03 / proof</p>
             <h3 id="verify-title">Verify twenty beats</h3>
-            <p>Repeat the pulse test. We remove the measured device offset and report the median absolute residual.</p>
+            <p>Repeat the pulse test. The report removes the measured offset and shows the median absolute residual.</p>
           </header>
           <div class="pass-body">
             <div class="verification-box">
-              <p id="verify-instruction">Confirm Passes 01 and 02 to unlock verification.</p>
+              <p id="verify-instruction">Confirm Passes 01 and 02 before verification.</p>
               <button id="start-verify" class="button primary" type="button" disabled>Start 20-beat verification</button>
               <button id="verify-pad" class="tap-pad compact" type="button" disabled><span>TAP</span><small id="verify-count">0 / 20</small></button>
               <button id="stop-verify" class="text-button" type="button" hidden>Stop verification</button>
@@ -187,16 +208,16 @@
       </section>
 
       <aside class="limits" aria-labelledby="limits-title">
-        <p class="eyebrow">Read before shipping</p>
-        <h2 id="limits-title">An estimate, not a lab loopback.</h2>
+        <p class="eyebrow">Measurement limits</p>
+        <h2 id="limits-title">Browser timing is an estimate</h2>
         <p>Browsers cannot observe the instant sound leaves a speaker. Pulse Check measures your tap against the Web Audio clock, so output latency, display latency, touch sampling, and human response can mingle. Repeat on each target device, keep the cue mode and output route consistent, and use a physical loopback for release-critical measurement.</p>
       </aside>
     </main>
 
     <footer>
-      <p><strong>Pulse Check</strong> · A free, local-first timing instrument.</p>
-      <nav aria-label="Legal"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="https://github.com/B-Divyesh/sf-timing-calibrator">Source</a></nav>
-      <p class="fine-print">The editorial bench image was generated for this product; no stock assets or tracking scripts are used.</p>
+      <p><strong>Pulse Check</strong> helps makers check track drift and device delay.</p>
+      <nav aria-label="Footer navigation"><a href="/demo">Demo</a><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="https://github.com/B-Divyesh/sf-timing-calibrator">Source <span class="sr-only">(opens GitHub)</span></a></nav>
+      <p class="fine-print">Built by Param Factory · Build 1.1.0 · Illustration generated for Pulse Check.</p>
     </footer>
     <div id="offline-note" class="offline-note" role="status" hidden>You’re offline. Pulse Check still works; keep this tab open.</div>
     <script type="module" src="/src/main.ts"></script>

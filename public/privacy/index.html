@@ -1,3 +1,20 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f3f0e8"><title>Privacy — Pulse Check</title><style>
-*{box-sizing:border-box}body{margin:0;background:#f3f0e8;color:#151512;font:18px/1.6 Arial,sans-serif}header,main,footer{max-width:780px;margin:auto;padding:32px 20px}header{border-bottom:4px solid #151512;text-transform:uppercase;font-weight:700}h1,h2{font-family:Georgia,serif;line-height:1}h1{font-size:clamp(3rem,12vw,6rem);letter-spacing:-.05em}h2{margin-top:48px;font-size:2rem}a{color:#7d1710;text-underline-offset:4px}:focus-visible{outline:3px solid #b42318;outline-offset:4px}.back{display:inline-flex;min-height:44px;align-items:center}footer{border-top:1px solid #151512;color:#5c5a52}
-</style></head><body><header><a class="back" href="/">← Pulse Check</a></header><main><h1>Privacy</h1><p><strong>Effective 28 August 2026.</strong></p><p>Pulse Check is a local-first utility. Imported audio, detected onsets, taps, device labels, and calibration reports are processed in your browser. They are not uploaded to us and are not stored on a server.</p><h2>Storage and network use</h2><p>The service worker stores the application shell and generated editorial image in your browser cache so the tool can work offline. Clearing site data removes this cache. Pulse Check uses no cookies, advertising, analytics, microphone access, or third-party runtime services.</p><h2>Your exports</h2><p>JSON exports are created on your device and saved only where you choose. They include the device label you enter and timing measurements, but no audio.</p><h2>Contact</h2><p>Questions can be raised through the project’s public source repository linked from the main page.</p></main><footer>Pulse Check · Local timing calibration</footer></body></html>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f3f0e8" />
+    <meta name="description" content="How Pulse Check handles local audio, demo storage, browser cache, and exports." />
+    <link rel="canonical" href="https://timing-calibrator.sociobot.in/privacy/" />
+    <title>Privacy — Pulse Check</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="stylesheet" href="/legal.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to privacy details</a>
+    <header class="masthead"><a class="wordmark" href="/" aria-label="Pulse Check home">Pulse Check</a><nav aria-label="Primary navigation"><a href="/demo">Demo</a><a href="/#calibrator">Calibration</a><a href="/privacy/" aria-current="page">Privacy</a></nav></header>
+    <main id="main"><h1 tabindex="-1">Privacy at Pulse Check</h1><p class="lead">Pulse Check handles audio and timing measurements in your browser.</p><p><strong>Effective 6 September 2026.</strong></p><h2>Audio and measurements</h2><p>Imported audio, detected onsets, taps, device labels, and calibration reports stay in your browser. Pulse Check does not upload them or store them on a server.</p><h2>Demo storage and browser cache</h2><p>The demo uses a separate browser key named <code>demo:pulse-check:session</code>. It is removed when you choose Start for real. The service worker caches application files so the tool can work offline after the first visit. Clearing site data removes the cache and any demo key.</p><h2>Cookies and external services</h2><p>Pulse Check uses no cookies, advertising, analytics, microphone access, or third-party runtime services. It does not need an account or API key.</p><h2>Your exports</h2><p>JSON exports are created on your device and saved only where you choose. They include the device label you enter and timing measurements, but no audio.</p><h2>Contact</h2><p>Questions can be raised through the public source repository linked in the footer.</p></main>
+    <footer><p><strong>Pulse Check</strong> helps makers check track drift and device delay.</p><nav class="footer-nav" aria-label="Footer navigation"><a href="/demo">Demo</a><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="https://github.com/B-Divyesh/sf-timing-calibrator">Source</a></nav><p class="footer-note">Built by Param Factory · Build 1.1.0 · Illustration generated for Pulse Check.</p></footer>
+  </body>
+</html>

@@ -1,12 +1,17 @@
 // Bump this whenever the precached application shell changes so existing
 // offline users receive the repaired shell instead of a cache-first old one.
-const CACHE = 'pulse-check-v3';
+const CACHE = 'pulse-check-v4';
 const SHELL = [
   '/',
+  '/demo',
   '/privacy/',
   '/terms/',
+  '/404.html',
+  '/legal.css',
   '/assets/pulse-bench-768.webp',
   '/assets/pulse-bench-1536.webp',
+  '/assets/pulse-check-social.jpg',
+  '/apple-touch-icon.png',
   '/favicon.svg',
 ];
 

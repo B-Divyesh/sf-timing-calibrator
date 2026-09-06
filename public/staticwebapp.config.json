@@ -1,11 +1,15 @@
 {
   "routes": [
+    { "route": "/demo", "rewrite": "/index.html" },
+    { "route": "/demo/", "rewrite": "/index.html" },
     { "route": "/assets/*", "headers": { "cache-control": "public, max-age=31536000, immutable" } },
     { "route": "/sw.js", "headers": { "cache-control": "no-cache" } }
   ],
-  "navigationFallback": { "rewrite": "/index.html", "exclude": ["/privacy/*", "/terms/*", "/assets/*", "*.js", "*.css", "*.webp", "*.svg"] },
+  "responseOverrides": {
+    "404": { "rewrite": "/404.html" }
+  },
   "globalHeaders": {
-    "content-security-policy": "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; media-src 'self' blob:; worker-src 'self';",
+    "content-security-policy": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; img-src 'self' data:; style-src 'self'; script-src 'self'; connect-src 'self'; media-src 'self' blob:; worker-src 'self';",
     "referrer-policy": "strict-origin-when-cross-origin",
     "x-content-type-options": "nosniff",
     "permissions-policy": "camera=(), microphone=(), geolocation=()"

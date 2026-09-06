@@ -1,18 +1,20 @@
 {
   "name": "pulse-check",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build",
-    "test": "vitest run src",
+    "test": "npm run test:unit",
+    "test:unit": "vitest run src",
     "test:e2e": "playwright test",
     "preview": "vite preview --host 0.0.0.0"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.10.2",
     "@playwright/test": "1.58.2",
+    "@types/node": "^24.3.1",
     "typescript": "5.9.2",
     "vite": "7.3.6",
     "vitest": "3.2.7"

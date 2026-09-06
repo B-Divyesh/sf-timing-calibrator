@@ -86,9 +86,16 @@ hand-authored in HTML/CSS/SVG because they must be exact and accessible.
 
 ## Asset provenance
 
-- `public/assets/pulse-bench.webp`: generated specifically for Pulse Check with
+- `public/assets/pulse-bench-1536.webp` and `public/assets/pulse-bench-768.webp`:
+  generated specifically for Pulse Check with
   the factory Azure image generation deployment (`factory-image`) on
   2026-08-28 using the prompt sheet above; original source and prompt sidecar
   retained in `assets/src/`. Original generated work, no third-party asset.
+- `public/assets/pulse-check-social.jpg`: a 1200 × 630 editorial crop derived
+  from the generated bench illustration on 2026-09-06 for social previews.
+  It adds no third-party material.
+- `public/apple-touch-icon.png`: a hand-built rasterization of the product
+  mark on 2026-09-06; it uses only the documented Ink, Paper, and Proof red
+  tokens.
 - Functional waveform/grid graphics are produced from the user's local audio
   in-browser and are not uploaded or retained by Pulse Check.

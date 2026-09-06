@@ -1,6 +1,7 @@
 import './style.css';
 import { detectOnsets, waveformPeaks } from './analyzer';
 import { diagnoseDrift, estimateBpm, mad, median } from './math';
+import { CLEAN_SAMPLE_NAME, makeCleanSample } from './sample';
 
 const byId = <T extends HTMLElement>(id: string): T => {
   const element = document.getElementById(id);
@@ -52,6 +53,10 @@ let verification: VerificationState | null = null;
 let activeTest: ActiveTest | null = null;
 let audioContext: AudioContext | null = null;
 let sourceRevision = 0;
+let demoMode = isDemoRoute();
+
+const DEMO_STORAGE_KEY = 'demo:pulse-check:session';
+const ORIGIN = 'https://timing-calibrator.sociobot.in';
 
 const trackStatus = byId<HTMLDivElement>('track-status');
 const deviceStatus = byId<HTMLDivElement>('device-status');
@@ -64,6 +69,10 @@ const startTest = byId<HTMLButtonElement>('start-test');
 const tapPad = byId<HTMLButtonElement>('tap-pad');
 const startVerify = byId<HTMLButtonElement>('start-verify');
 const verifyPad = byId<HTMLButtonElement>('verify-pad');
+
+function isDemoRoute(): boolean {
+  return location.pathname.replace(/\/+$/, '') === '/demo' || new URLSearchParams(location.search).get('demo') === '1';
+}
 
 function setStatus(element: HTMLElement, message: string, kind: 'neutral' | 'error' | 'success' = 'neutral'): void {
   element.textContent = message;
@@ -103,7 +112,7 @@ function clearVerification(message = 'Complete a fresh device measurement before
   verifyResults.hidden = true;
   verifyResults.classList.remove('pass-report', 'fail-report');
   startVerify.disabled = true;
-  byId('verify-instruction').textContent = 'Confirm Passes 01 and 02 to unlock verification.';
+  byId('verify-instruction').textContent = 'Confirm Passes 01 and 02 before verification.';
   byId('json-preview').textContent = '';
   setStatus(verifyStatus, message);
 }
@@ -146,17 +155,51 @@ function hasCompleteCalibration(): boolean {
   return Boolean(source?.confirmed && device?.confirmed && verification);
 }
 
-function makeSample(): { samples: Float32Array; sampleRate: number } {
-  const sampleRate = 44_100;
-  const samples = new Float32Array(sampleRate * 8);
-  for (let beat = 0; beat < 16; beat += 1) {
-    const start = Math.round(beat * 0.5 * sampleRate);
-    for (let index = 0; index < 900; index += 1) {
-      const envelope = Math.exp(-index / 160);
-      samples[start + index] += Math.sin((2 * Math.PI * 880 * index) / sampleRate) * envelope * 0.85;
-    }
+function resetCalibration(trackMessage = 'No track loaded yet.'): void {
+  sourceRevision += 1;
+  cancelActiveTest();
+  source = null;
+  trackResults.hidden = true;
+  audioFile.value = '';
+  byId<HTMLInputElement>('bpm').value = '';
+  byId<HTMLInputElement>('anchor').value = '';
+  byId<HTMLInputElement>('device-name').value = '';
+  byId<HTMLInputElement>('manual-offset').value = '';
+  clearDeviceAndVerification(false);
+  setStatus(trackStatus, trackMessage);
+}
+
+function setRouteChrome(announce = false): void {
+  const canonical = byId<HTMLLinkElement>('canonical');
+  const banner = byId<HTMLElement>('demo-banner');
+  document.body.classList.toggle('demo-mode', demoMode);
+  banner.hidden = !demoMode;
+  document.title = demoMode ? 'Demo — Pulse Check' : 'Pulse Check — Track and device timing';
+  canonical.href = demoMode ? `${ORIGIN}/demo` : `${ORIGIN}/`;
+  if (announce) {
+    byId('route-status').textContent = demoMode ? 'Demo loaded.' : 'Ready to analyze local audio.';
+    byId<HTMLElement>('hero-title').focus({ preventScroll: true });
   }
-  return { samples, sampleRate };
+}
+
+function loadDemoSample(): void {
+  const sample = makeCleanSample();
+  const revision = prepareForNewSource();
+  analyze(sample.samples, sample.sampleRate, CLEAN_SAMPLE_NAME, sample.duration, revision);
+}
+
+function enterDemo(announce = false): void {
+  demoMode = true;
+  localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify({ sample: 'steady-120-bpm', version: 1 }));
+  setRouteChrome(announce);
+  loadDemoSample();
+}
+
+function leaveDemo(announce = false): void {
+  demoMode = false;
+  localStorage.removeItem(DEMO_STORAGE_KEY);
+  setRouteChrome(announce);
+  resetCalibration('Choose a local audio file to start a calibration.');
 }
 
 async function loadFile(file: File): Promise<void> {
@@ -202,7 +245,10 @@ function analyze(samples: Float32Array, sampleRate: number, name: string, durati
     renderSource();
     trackResults.hidden = false;
     setStatus(trackStatus, `${name} analyzed locally. Review the proposed grid below.`, 'success');
-    trackResults.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest' });
+    trackResults.scrollIntoView({
+      behavior: demoMode || matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+      block: demoMode ? 'start' : 'nearest',
+    });
   }, 20);
 }
 
@@ -474,7 +520,7 @@ function downloadExport(): void {
 }
 
 audioFile.addEventListener('change', () => { const file = audioFile.files?.[0]; if (file) void loadFile(file); });
-byId('sample-button').addEventListener('click', () => { const sample = makeSample(); analyze(sample.samples, sample.sampleRate, 'Pulse Check clean sample', 8); });
+byId('sample-button').addEventListener('click', () => { window.location.assign('/demo'); });
 const dropZone = byId('drop-zone');
 dropZone.addEventListener('dragover', (event) => { event.preventDefault(); dropZone.classList.add('dragover'); });
 dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
@@ -523,9 +569,23 @@ byId('copy-json').addEventListener('click', async () => {
   catch { setStatus(verifyStatus, 'Clipboard access was blocked. Open the preview and copy the JSON manually.', 'error'); }
 });
 
+byId('reset-demo').addEventListener('click', () => enterDemo(true));
+byId('start-real').addEventListener('click', () => {
+  history.pushState({}, '', '/');
+  leaveDemo(true);
+});
+window.addEventListener('popstate', () => {
+  const shouldDemo = isDemoRoute();
+  if (shouldDemo) enterDemo(true);
+  else leaveDemo(true);
+});
+
 const offlineNote = byId('offline-note');
 const updateNetwork = (): void => { offlineNote.hidden = navigator.onLine; };
 window.addEventListener('online', updateNetwork);
 window.addEventListener('offline', updateNetwork);
 updateNetwork();
 if ('serviceWorker' in navigator && import.meta.env.PROD) window.addEventListener('load', () => void navigator.serviceWorker.register('/sw.js'));
+
+if (demoMode) window.setTimeout(() => enterDemo(), 0);
+else setRouteChrome();

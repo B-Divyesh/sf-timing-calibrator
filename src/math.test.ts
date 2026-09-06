@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { diagnoseDrift, estimateBpm, mad, median } from './math';
 import { detectOnsets } from './analyzer';
+import { CLEAN_SAMPLE_BPM, makeCleanSample } from './sample';
 
 describe('timing statistics', () => {
   it('calculates robust centers', () => {
@@ -31,5 +32,17 @@ describe('timing statistics', () => {
       for (let index = 0; index < 80; index += 1) samples[Math.round(second * rate) + index] = Math.exp(-index / 20);
     }
     expect(detectOnsets(samples, rate)).toHaveLength(5);
+  });
+
+  it('keeps the clean 120 BPM reference sample on a steady displayed grid', () => {
+    const sample = makeCleanSample();
+    const onsets = detectOnsets(sample.samples, sample.sampleRate);
+    const bpm = estimateBpm(onsets);
+    const diagnosis = diagnoseDrift(onsets, bpm, Math.round(onsets[0] * 1000) / 1000);
+
+    expect(onsets).toHaveLength(15);
+    expect(bpm).toBe(CLEAN_SAMPLE_BPM);
+    expect(diagnosis.diagnosis).toBe('steady');
+    expect(Math.abs(diagnosis.driftMsPerMinute)).toBeLessThan(1);
   });
 });

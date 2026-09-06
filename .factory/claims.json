@@ -1,0 +1,100 @@
+[
+  {
+    "id": "demo-one-click",
+    "claim": "A populated steady-track sample opens at /demo without setup.",
+    "where": "Demo link and landing action",
+    "test": "npm run test:e2e -- --project=chromium --grep @claim:demo-one-click",
+    "sandbox": "Fresh browser context loads /demo and observes its populated source result."
+  },
+  {
+    "id": "demo-isolation",
+    "claim": "Demo sample data stays separate from real browser data and is discarded when leaving demo.",
+    "where": "Demo banner and Privacy",
+    "test": "npm run test:e2e -- --project=chromium --grep @claim:demo-isolation",
+    "sandbox": "Fresh context seeds a real-data sentinel, enters /demo, resets, then starts for real."
+  },
+  {
+    "id": "steady-reference-track",
+    "claim": "The displayed 120 BPM reference track reports a steady source grid.",
+    "where": "Landing action and demo source result",
+    "test": "npm run test:e2e -- --project=chromium --grep @claim:steady-reference-track",
+    "sandbox": "Fresh /demo analysis checks the displayed BPM, source diagnosis, and drift result."
+  },
+  {
+    "id": "local-audio-onsets",
+    "claim": "Pulse Check analyzes selected local audio onsets in the browser.",
+    "where": "Track pass and README",
+    "test": "npm run test:e2e -- --project=chromium --grep @claim:local-audio-onsets",
+    "sandbox": "Fresh /demo uses a generated local WAV fixture and checks its onset result."
+  },
+  {
+    "id": "audio-size-limit",
+    "claim": "Audio files above 50 MB are rejected before decoding.",
+    "where": "Track pass",
+    "test": "npm run test:e2e -- --project=chromium --grep @claim:audio-size-limit",
+    "sandbox": "Fresh /demo dispatches a 50 MiB plus one byte local File and checks the recovery message."
+  },
+  {
+    "id": "device-tap",
+    "claim": "Twelve pulse taps produce a device timing result.",
+    "where": "Device pass and README",
+    "test": "npm run test:e2e -- --project=chromium --grep @claim:device-tap",
+    "sandbox": "Fresh /demo confirms the source then taps every visual pulse and checks the 12-sample result."
+  },
+  {
+    "id": "manual-offset",
+    "claim": "A known offset can be used instead of tapping.",
+    "where": "Device pass and README",
+    "test": "npm run test:e2e -- --project=chromium --grep @claim:manual-offset",
+    "sandbox": "Fresh /demo confirms the source, enters a signed known offset, and checks the manual result."
+  },
+  {
+    "id": "twenty-beat-proof",
+    "claim": "A 20-beat verification reports a corrected timing result.",
+    "where": "Verify pass and README",
+    "test": "npm run test:e2e -- --project=chromium --grep @claim:twenty-beat-proof",
+    "sandbox": "Fresh /demo completes source, manual device, and 20 visual verification pulses."
+  },
+  {
+    "id": "engine-json-export",
+    "claim": "Calibration JSON includes Godot, Unity, or generic engine settings.",
+    "where": "Export controls and README",
+    "test": "npm run test:e2e -- --project=chromium --grep @claim:engine-json-export",
+    "sandbox": "Fresh /demo completes verification, switches all targets, and downloads generic JSON."
+  },
+  {
+    "id": "local-privacy",
+    "claim": "Audio and measurements stay in the browser; Pulse Check uses no cookies or third-party runtime requests.",
+    "where": "Landing facts, Privacy, and README",
+    "test": "npm run test:e2e -- --project=chromium --grep @claim:local-privacy",
+    "sandbox": "Fresh /demo records requests through a complete sample flow, checks cookies, and inspects the exported JSON."
+  },
+  {
+    "id": "offline-reload",
+    "claim": "Pulse Check works offline after the first visit.",
+    "where": "Landing facts, Privacy, and README",
+    "test": "npm run test:e2e -- --project=chromium --grep @claim:offline-reload",
+    "sandbox": "Dedicated fresh browser context visits /demo, waits for its service worker, goes offline, and reloads."
+  },
+  {
+    "id": "no-account-sample",
+    "claim": "The sample runs with no account or payment details.",
+    "where": "Landing facts and Privacy",
+    "test": "npm run test:e2e -- --project=chromium --grep @claim:no-account-sample",
+    "sandbox": "Fresh /demo reaches the sample result without account or payment fields."
+  },
+  {
+    "id": "required-measurements",
+    "claim": "Blank timing measurements are rejected while explicit boundary values are accepted.",
+    "where": "README and timing forms",
+    "test": "npm run test:e2e -- --project=chromium --grep @claim:required-measurements",
+    "sandbox": "Fresh /demo submits a blank manual value, then an explicit −1000 ms boundary value."
+  },
+  {
+    "id": "dependent-results-reset",
+    "claim": "Changing a confirmed source grid clears every dependent device, proof, and export result.",
+    "where": "README and calibration workflow",
+    "test": "npm run test:e2e -- --project=chromium --grep @claim:dependent-results-reset",
+    "sandbox": "Fresh /demo completes a calibration, edits BPM, then checks all downstream state is hidden and disabled."
+  }
+]
